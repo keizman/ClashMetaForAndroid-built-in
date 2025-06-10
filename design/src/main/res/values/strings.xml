@@ -23,6 +23,7 @@
     <string name="settings">Settings</string>
     <string name="help">Help</string>
     <string name="about">About</string>
+    <string name="sync_profile">Sync Profile</string>
 
     <string name="copied">Copied</string>
 
@@ -338,6 +339,10 @@
     <string name="geofile_imported">%1$s imported</string>
     <string name="toast_profile_updated_complete">Update profile %s completed</string>
     <string name="toast_profile_updated_failed">Update profile %1$s failed: %2$s</string>
+    <string name="sync_profile_downloading">Downloading profiles...</string>
+    <string name="sync_profile_success">All profiles synced successfully</string>
+    <string name="sync_profile_failed">Failed to sync profiles: %s</string>
+    <string name="sync_profile_partial_failed">Some profiles failed to sync</string>
     <string name="external_control_activity">External Control</string>
     <string name="external_control_started">Clash.Meta service started</string>
     <string name="external_control_stopped">Clash.Meta service stopped</string>

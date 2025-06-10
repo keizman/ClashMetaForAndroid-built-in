@@ -147,6 +147,14 @@
                     android:onClick="@{() -> self.request(Request.OpenAbout)}"
                     app:icon="@drawable/ic_baseline_info"
                     app:text="@string/about" />
+
+                <com.github.kr328.clash.design.view.LargeActionLabel
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginVertical="@dimen/main_label_margin_vertical"
+                    android:onClick="@{() -> self.request(Request.SyncProfile)}"
+                    app:icon="@drawable/ic_baseline_cloud_download"
+                    app:text="@string/sync_profile" />
             </LinearLayout>
         </ScrollView>
     </androidx.coordinatorlayout.widget.CoordinatorLayout>

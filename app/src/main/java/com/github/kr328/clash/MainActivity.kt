@@ -17,10 +17,16 @@ import com.github.kr328.clash.util.stopClashService
 import com.github.kr328.clash.util.withClash
 import com.github.kr328.clash.util.withProfile
 import com.github.kr328.clash.core.bridge.*
+import com.github.kr328.clash.service.model.Profile
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.selects.select
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import okhttp3.OkHttpClient
+import okhttp3.Request
 import java.util.concurrent.TimeUnit
 import com.github.kr328.clash.design.R
 
@@ -72,6 +78,8 @@ class MainActivity : BaseActivity<MainDesign>() {
                             startActivity(HelpActivity::class.intent)
                         MainDesign.Request.OpenAbout ->
                             design.showAbout(queryAppVersionName())
+                        MainDesign.Request.SyncProfile ->
+                            syncBuiltInProfiles(design)
                     }
                 }
                 if (clashRunning) {
@@ -140,6 +148,110 @@ class MainActivity : BaseActivity<MainDesign>() {
     private suspend fun queryAppVersionName(): String {
         return withContext(Dispatchers.IO) {
             packageManager.getPackageInfo(packageName, 0).versionName + "\n" + Bridge.nativeCoreVersion().replace("_", "-")
+        }
+    }
+
+    private suspend fun syncBuiltInProfiles(design: MainDesign) {
+        launch {
+            try {
+                // Show syncing toast
+                design.showToast("Syncing profiles...", ToastDuration.Long)
+                
+                // Define profiles to download
+                val builtInProfiles = listOf(
+                    "http://192.168.1.118:59996/clash/dns_67.yaml" to "dns_67",
+                    "http://192.168.1.118:59996/clash/dns_65.yaml" to "dns_65", 
+                    "http://192.168.1.118:59996/clash/dns_64.yaml" to "dns_64",
+                    "http://192.168.1.118:59996/clash/dns_62.yaml" to "dns_62"
+                )
+                
+                var successCount = 0
+                val totalCount = builtInProfiles.size
+                val failedProfiles = mutableListOf<String>()
+                
+                // Create HTTP client with reasonable timeouts
+                val client = OkHttpClient.Builder()
+                    .connectTimeout(10, TimeUnit.SECONDS)
+                    .readTimeout(10, TimeUnit.SECONDS)
+                    .build()
+                
+                // Process each profile individually
+                for ((url, name) in builtInProfiles) {
+                    try {
+                        // Test network connectivity with GET request (not HEAD)
+                        val request = Request.Builder()
+                            .url(url)
+                            .header("User-Agent", "ClashforWindows/0.19.23")
+                            .get() // Use GET request instead of HEAD
+                            .build()
+                        
+                        val isAccessible = withContext(Dispatchers.IO) {
+                            try {
+                                client.newCall(request).execute().use { response ->
+                                    response.isSuccessful && response.body != null
+                                }
+                            } catch (e: Exception) {
+                                android.util.Log.w("SyncProfile", "Failed to access $name: ${e.message}")
+                                false
+                            }
+                        }
+                        
+                        if (isAccessible) {
+                            // Network accessible, try to create profile
+                            withProfile {
+                                try {
+                                    // Check if profile with same name already exists
+                                    val existingProfiles = queryAll()
+                                    val exists = existingProfiles.any { it.name == name }
+                                    
+                                    if (!exists) {
+                                        val uuid = create(Profile.Type.Url, name, url)
+                                        commit(uuid)
+                                        successCount++
+                                        android.util.Log.i("SyncProfile", "Successfully added profile: $name")
+                                    } else {
+                                        // Already exists, skip but count as success
+                                        successCount++
+                                        android.util.Log.i("SyncProfile", "Profile already exists: $name")
+                                    }
+                                } catch (e: Exception) {
+                                    android.util.Log.w("SyncProfile", "Failed to create profile $name: ${e.message}")
+                                    failedProfiles.add(name)
+                                }
+                            }
+                        } else {
+                            failedProfiles.add(name)
+                        }
+                    } catch (e: Exception) {
+                        // Network error, log but continue with other profiles
+                        android.util.Log.w("SyncProfile", "Network error for $name: ${e.message}")
+                        failedProfiles.add(name)
+                    }
+                }
+                
+                // Show detailed result message
+                when {
+                    successCount == totalCount -> {
+                        design.showToast("All profiles synced successfully", ToastDuration.Long)
+                    }
+                    successCount > 0 -> {
+                        val message = "Successfully added $successCount/$totalCount profiles"
+                        if (failedProfiles.isNotEmpty()) {
+                            android.util.Log.i("SyncProfile", "Failed profiles: ${failedProfiles.joinToString()}")
+                        }
+                        design.showToast(message, ToastDuration.Long)
+                    }
+                    else -> {
+                        val firstFailedUrl = builtInProfiles.firstOrNull { p -> failedProfiles.contains(p.second) }?.first
+                        val message = "Sync failed for ${firstFailedUrl ?: "profiles"}. Check network."
+                        design.showToast(message, ToastDuration.Long)
+                    }
+                }
+                
+            } catch (e: Exception) {
+                android.util.Log.e("SyncProfile", "Unexpected error in syncBuiltInProfiles", e)
+                design.showToast("Error syncing profiles: ${e.message}", ToastDuration.Long)
+            }
         }
     }
 
