@@ -1,9 +1,12 @@
 package com.github.kr328.clash
 
+import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.PersistableBundle
+import android.provider.Settings
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.result.contract.ActivityResultContracts.RequestPermission
 import androidx.core.app.ActivityCompat
@@ -80,6 +83,10 @@ class MainActivity : BaseActivity<MainDesign>() {
                             design.showAbout(queryAppVersionName())
                         MainDesign.Request.SyncProfile ->
                             syncBuiltInProfiles(design)
+                        MainDesign.Request.ShowFloatingWindow -> {
+                            showFloatingWindow()
+                            design.fetch()
+                        }
                     }
                 }
                 if (clashRunning) {
@@ -103,6 +110,7 @@ class MainActivity : BaseActivity<MainDesign>() {
 
         setMode(state.mode)
         setHasProviders(providers.isNotEmpty())
+        setFloatingWindowShowing(FloatingWindowService.isShowing)
 
         withProfile {
             setProfileName(queryActive()?.name)
@@ -148,6 +156,28 @@ class MainActivity : BaseActivity<MainDesign>() {
     private suspend fun queryAppVersionName(): String {
         return withContext(Dispatchers.IO) {
             packageManager.getPackageInfo(packageName, 0).versionName + "\n" + Bridge.nativeCoreVersion().replace("_", "-")
+        }
+    }
+
+    private fun showFloatingWindow() {
+        if (FloatingWindowService.isShowing) {
+            // Hide floating window
+            val intent = Intent(this, FloatingWindowService::class.java)
+            intent.action = FloatingWindowService.ACTION_HIDE
+            startService(intent)
+        } else {
+            // Show floating window
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                if (!Settings.canDrawOverlays(this)) {
+                    val intent = Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:$packageName"))
+                    startActivity(intent)
+                    return
+                }
+            }
+            
+            val intent = Intent(this, FloatingWindowService::class.java)
+            intent.action = FloatingWindowService.ACTION_SHOW
+            startService(intent)
         }
     }
 

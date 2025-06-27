@@ -31,6 +31,7 @@ class MainDesign(context: Context) : Design<MainDesign.Request>(context) {
         OpenHelp,
         OpenAbout,
         SyncProfile,
+        ShowFloatingWindow,
     }
 
     private val binding = DesignMainBinding
@@ -71,6 +72,12 @@ class MainDesign(context: Context) : Design<MainDesign.Request>(context) {
     suspend fun setHasProviders(has: Boolean) {
         withContext(Dispatchers.Main) {
             binding.hasProviders = has
+        }
+    }
+
+    suspend fun setFloatingWindowShowing(showing: Boolean) {
+        withContext(Dispatchers.Main) {
+            binding.floatingWindowShowing = showing
         }
     }
 
