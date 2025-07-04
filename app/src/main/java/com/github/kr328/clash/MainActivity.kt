@@ -83,6 +83,8 @@ class MainActivity : BaseActivity<MainDesign>() {
                             design.showAbout(queryAppVersionName())
                         MainDesign.Request.SyncProfile ->
                             syncBuiltInProfiles(design)
+                        MainDesign.Request.RefreshProfiles ->
+                            refreshAllProfiles(design)
                         MainDesign.Request.ShowFloatingWindow -> {
                             showFloatingWindow()
                             design.fetch()
@@ -192,7 +194,8 @@ class MainActivity : BaseActivity<MainDesign>() {
                     "http://192.168.1.118:59996/clash/dns_67.yaml" to "dns_67",
                     "http://192.168.1.118:59996/clash/dns_65.yaml" to "dns_65", 
                     "http://192.168.1.118:59996/clash/dns_64.yaml" to "dns_64",
-                    "http://192.168.1.118:59996/clash/dns_62.yaml" to "dns_62",
+                    // "http://192.168.1.118:59996/clash/dns_62.yaml" to "dns_62",
+                    "http://192.168.1.118:59996/clash/dns_reject.yaml" to "dns_reject",
                     "http://192.168.1.118:59996/clash/pre-product.yaml" to "pre-product",
                     "http://192.168.1.118:59996/clash/product.yaml" to "product"
                 )
@@ -283,6 +286,53 @@ class MainActivity : BaseActivity<MainDesign>() {
             } catch (e: Exception) {
                 android.util.Log.e("SyncProfile", "Unexpected error in syncBuiltInProfiles", e)
                 design.showToast("Error syncing profiles: ${e.message}", ToastDuration.Long)
+            }
+        }
+    }
+
+    private suspend fun refreshAllProfiles(design: MainDesign) {
+        launch {
+            try {
+                design.showToast("Refreshing profiles...", ToastDuration.Long)
+                
+                withProfile {
+                    try {
+                        val profiles = queryAll()
+                        val updatableProfiles = profiles.filter { it.imported && it.type != Profile.Type.File }
+                        
+                        if (updatableProfiles.isEmpty()) {
+                            design.showToast("No profiles to refresh", ToastDuration.Long)
+                            return@withProfile
+                        }
+                        
+                        var successCount = 0
+                        var failedCount = 0
+                        
+                        for (profile in updatableProfiles) {
+                            try {
+                                update(profile.uuid)
+                                successCount++
+                            } catch (e: Exception) {
+                                android.util.Log.w("RefreshProfiles", "Failed to refresh profile ${profile.name}: ${e.message}")
+                                failedCount++
+                            }
+                        }
+                        
+                        val message = when {
+                            failedCount == 0 -> "All profiles refreshed successfully"
+                            successCount == 0 -> "Failed to refresh profiles"
+                            else -> "Refreshed $successCount profiles, $failedCount failed"
+                        }
+                        
+                        design.showToast(message, ToastDuration.Long)
+                    } catch (e: Exception) {
+                        android.util.Log.e("RefreshProfiles", "Error refreshing profiles", e)
+                        design.showToast("Error refreshing profiles: ${e.message}", ToastDuration.Long)
+                    }
+                }
+            } catch (e: Exception) {
+                android.util.Log.e("RefreshProfiles", "Unexpected error in refreshAllProfiles", e)
+                design.showToast("Error refreshing profiles: ${e.message}", ToastDuration.Long)
             }
         }
     }

@@ -24,6 +24,7 @@
     <string name="help">Help</string>
     <string name="about">About</string>
     <string name="sync_profile">Sync Profile</string>
+    <string name="refresh_profiles">Refresh Profiles</string>
     <string name="floating_window">Floating Window</string>
     <string name="show_floating_window">Show Floating Window</string>
     <string name="hide_floating_window">Hide Floating Window</string>

@@ -31,6 +31,7 @@ class MainDesign(context: Context) : Design<MainDesign.Request>(context) {
         OpenHelp,
         OpenAbout,
         SyncProfile,
+        RefreshProfiles,
         ShowFloatingWindow,
     }
 

@@ -112,6 +112,14 @@
 
                 <com.github.kr328.clash.design.view.LargeActionLabel
                     android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginVertical="@dimen/main_label_margin_vertical"
+                    android:onClick="@{() -> self.request(Request.RefreshProfiles)}"
+                    app:icon="@drawable/ic_baseline_sync"
+                    app:text="@string/refresh_profiles" />
+
+                <com.github.kr328.clash.design.view.LargeActionLabel
+                    android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:layout_marginVertical="@dimen/main_label_margin_vertical"
                     android:onClick="@{() -> self.request(Request.OpenProviders)}"
