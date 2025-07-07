@@ -184,6 +184,7 @@ class MainActivity : BaseActivity<MainDesign>() {
     }
 
     private suspend fun syncBuiltInProfiles(design: MainDesign) {
+        val TAG = "ClashMetaForAndroid"
         launch {
             try {
                 // Show syncing toast
@@ -200,6 +201,8 @@ class MainActivity : BaseActivity<MainDesign>() {
                     "http://192.168.1.118:59996/clash/product.yaml" to "product"
                 )
                 
+                android.util.Log.i(TAG, "[SyncProfile] Starting sync operation with ${builtInProfiles.size} profiles")
+                
                 var successCount = 0
                 val totalCount = builtInProfiles.size
                 val failedProfiles = mutableListOf<String>()
@@ -212,6 +215,9 @@ class MainActivity : BaseActivity<MainDesign>() {
                 
                 // Process each profile individually
                 for ((url, name) in builtInProfiles) {
+                    android.util.Log.d(TAG, "[SyncProfile] Processing profile: $name from URL: $url")
+                    val startTime = System.currentTimeMillis()
+                    
                     try {
                         // Test network connectivity with GET request (not HEAD)
                         val request = Request.Builder()
@@ -220,19 +226,26 @@ class MainActivity : BaseActivity<MainDesign>() {
                             .get() // Use GET request instead of HEAD
                             .build()
                         
+                        android.util.Log.d(TAG, "[SyncProfile] Testing network access for $name...")
+                        
                         val isAccessible = withContext(Dispatchers.IO) {
                             try {
                                 client.newCall(request).execute().use { response ->
-                                    response.isSuccessful && response.body != null
+                                    val accessible = response.isSuccessful && response.body != null
+                                    val responseTime = System.currentTimeMillis() - startTime
+                                    android.util.Log.d(TAG, "[SyncProfile] Network test for $name - Status: ${response.code}, Accessible: $accessible, Response Time: ${responseTime}ms")
+                                    accessible
                                 }
                             } catch (e: Exception) {
-                                android.util.Log.w("SyncProfile", "Failed to access $name: ${e.message}")
+                                val responseTime = System.currentTimeMillis() - startTime
+                                android.util.Log.w(TAG, "[SyncProfile] Network access failed for $name after ${responseTime}ms: ${e.javaClass.simpleName} - ${e.message}")
                                 false
                             }
                         }
                         
                         if (isAccessible) {
                             // Network accessible, try to create profile
+                            android.util.Log.d(TAG, "[SyncProfile] Network accessible for $name, creating profile...")
                             withProfile {
                                 try {
                                     // Check if profile with same name already exists
@@ -243,48 +256,60 @@ class MainActivity : BaseActivity<MainDesign>() {
                                         val uuid = create(Profile.Type.Url, name, url)
                                         commit(uuid)
                                         successCount++
-                                        android.util.Log.i("SyncProfile", "Successfully added profile: $name")
+                                        val totalTime = System.currentTimeMillis() - startTime
+                                        android.util.Log.i(TAG, "[SyncProfile] Successfully added profile: $name (UUID: $uuid) in ${totalTime}ms")
                                     } else {
                                         // Already exists, skip but count as success
                                         successCount++
-                                        android.util.Log.i("SyncProfile", "Profile already exists: $name")
+                                        val totalTime = System.currentTimeMillis() - startTime
+                                        android.util.Log.i(TAG, "[SyncProfile] Profile already exists: $name (skipped) in ${totalTime}ms")
                                     }
                                 } catch (e: Exception) {
-                                    android.util.Log.w("SyncProfile", "Failed to create profile $name: ${e.message}")
+                                    val totalTime = System.currentTimeMillis() - startTime
+                                    android.util.Log.w(TAG, "[SyncProfile] Failed to create profile $name after ${totalTime}ms: ${e.javaClass.simpleName} - ${e.message}")
                                     failedProfiles.add(name)
                                 }
                             }
                         } else {
+                            val totalTime = System.currentTimeMillis() - startTime
+                            android.util.Log.w(TAG, "[SyncProfile] Network not accessible for $name after ${totalTime}ms, skipping profile creation")
                             failedProfiles.add(name)
                         }
                     } catch (e: Exception) {
                         // Network error, log but continue with other profiles
-                        android.util.Log.w("SyncProfile", "Network error for $name: ${e.message}")
+                        val totalTime = System.currentTimeMillis() - startTime
+                        android.util.Log.w(TAG, "[SyncProfile] Network error for $name after ${totalTime}ms: ${e.javaClass.simpleName} - ${e.message}")
                         failedProfiles.add(name)
                     }
                 }
                 
                 // Show detailed result message
+                android.util.Log.i(TAG, "[SyncProfile] Sync operation completed - Success: $successCount/$totalCount, Failed: ${failedProfiles.size}")
+                
                 when {
                     successCount == totalCount -> {
+                        android.util.Log.i(TAG, "[SyncProfile] All profiles synced successfully")
                         design.showToast("All profiles synced successfully", ToastDuration.Long)
                     }
                     successCount > 0 -> {
                         val message = "Successfully added $successCount/$totalCount profiles"
                         if (failedProfiles.isNotEmpty()) {
-                            android.util.Log.i("SyncProfile", "Failed profiles: ${failedProfiles.joinToString()}")
+                            android.util.Log.i(TAG, "[SyncProfile] Failed profiles: ${failedProfiles.joinToString()}")
                         }
+                        android.util.Log.i(TAG, "[SyncProfile] Partial sync success: $message")
                         design.showToast(message, ToastDuration.Long)
                     }
                     else -> {
                         val firstFailedUrl = builtInProfiles.firstOrNull { p -> failedProfiles.contains(p.second) }?.first
                         val message = "Sync failed for ${firstFailedUrl ?: "profiles"}. Check network."
+                        android.util.Log.w(TAG, "[SyncProfile] Complete sync failure: $message")
+                        android.util.Log.w(TAG, "[SyncProfile] All failed profiles: ${failedProfiles.joinToString()}")
                         design.showToast(message, ToastDuration.Long)
                     }
                 }
                 
             } catch (e: Exception) {
-                android.util.Log.e("SyncProfile", "Unexpected error in syncBuiltInProfiles", e)
+                android.util.Log.e(TAG, "[SyncProfile] Unexpected error in syncBuiltInProfiles", e)
                 design.showToast("Error syncing profiles: ${e.message}", ToastDuration.Long)
             }
         }
