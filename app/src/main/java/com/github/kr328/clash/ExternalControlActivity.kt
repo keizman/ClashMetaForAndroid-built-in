@@ -73,6 +73,10 @@ class ExternalControlActivity : Activity(), CoroutineScope by MainScope() {
             Intents.ACTION_TOGGLE_PROFILE -> {
                 toggleProfile()
             }
+
+            Intents.ACTION_REFRESH_PROFILE -> {
+                refreshAllProfiles()
+            }
         }
         return finish()
     }
@@ -137,6 +141,74 @@ class ExternalControlActivity : Activity(), CoroutineScope by MainScope() {
             } catch (e: Exception) {
                 android.util.Log.e(TAG, "[ToggleProfile] Error switching profile", e)
                 Toast.makeText(this@ExternalControlActivity, "Error switching profile: ${e.message}", Toast.LENGTH_LONG).show()
+            }
+        }
+    }
+
+    private fun refreshAllProfiles() {
+        val TAG = "ClashMetaForAndroid"
+        
+        launch {
+            try {
+                android.util.Log.i(TAG, "[RefreshAllProfiles] Starting profile refresh operation")
+                Toast.makeText(this@ExternalControlActivity, "Refreshing profiles...", Toast.LENGTH_LONG).show()
+                
+                withProfile {
+                    try {
+                        val profiles = queryAll()
+                        val updatableProfiles = profiles.filter { it.imported && it.type != Profile.Type.File }
+                        
+                        android.util.Log.i(TAG, "[RefreshAllProfiles] Found ${profiles.size} total profiles, ${updatableProfiles.size} updatable")
+                        
+                        if (updatableProfiles.isEmpty()) {
+                            android.util.Log.i(TAG, "[RefreshAllProfiles] No profiles to refresh")
+                            Toast.makeText(this@ExternalControlActivity, "No profiles to refresh", Toast.LENGTH_LONG).show()
+                            return@withProfile
+                        }
+                        
+                        var successCount = 0
+                        var failedCount = 0
+                        val refreshedProfiles = mutableListOf<String>()
+                        val failedProfiles = mutableListOf<String>()
+                        
+                        for (profile in updatableProfiles) {
+                            try {
+                                android.util.Log.i(TAG, "[RefreshAllProfiles] Refreshing profile: ${profile.name} (${profile.source})")
+                                update(profile.uuid)
+                                successCount++
+                                refreshedProfiles.add(profile.name)
+                                android.util.Log.i(TAG, "[RefreshAllProfiles] Successfully refreshed: ${profile.name}")
+                            } catch (e: Exception) {
+                                android.util.Log.w(TAG, "[RefreshAllProfiles] Failed to refresh profile ${profile.name}: ${e.message}")
+                                failedCount++
+                                failedProfiles.add(profile.name)
+                            }
+                        }
+                        
+                        // Log summary of refreshed profiles
+                        if (refreshedProfiles.isNotEmpty()) {
+                            android.util.Log.i(TAG, "[RefreshAllProfiles] Successfully refreshed profiles: ${refreshedProfiles.joinToString(", ")}")
+                        }
+                        if (failedProfiles.isNotEmpty()) {
+                            android.util.Log.w(TAG, "[RefreshAllProfiles] Failed to refresh profiles: ${failedProfiles.joinToString(", ")}")
+                        }
+                        
+                        val message = when {
+                            failedCount == 0 -> "All profiles refreshed successfully"
+                            successCount == 0 -> "Failed to refresh profiles"
+                            else -> "Refreshed $successCount profiles, $failedCount failed"
+                        }
+                        
+                        android.util.Log.i(TAG, "[RefreshAllProfiles] Operation completed: $message")
+                        Toast.makeText(this@ExternalControlActivity, message, Toast.LENGTH_LONG).show()
+                    } catch (e: Exception) {
+                        android.util.Log.e(TAG, "[RefreshAllProfiles] Error refreshing profiles", e)
+                        Toast.makeText(this@ExternalControlActivity, "Error refreshing profiles: ${e.message}", Toast.LENGTH_LONG).show()
+                    }
+                }
+            } catch (e: Exception) {
+                android.util.Log.e(TAG, "[RefreshAllProfiles] Unexpected error in refreshAllProfiles", e)
+                Toast.makeText(this@ExternalControlActivity, "Error refreshing profiles: ${e.message}", Toast.LENGTH_LONG).show()
             }
         }
     }

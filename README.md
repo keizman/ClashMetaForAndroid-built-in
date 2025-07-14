@@ -58,6 +58,11 @@ APP package name is `com.github.metacubex.clash.meta`
   - This cycles through all available profiles in order and selects the next one
   - Only changes the active profile without starting/stopping the service
   - Logs detailed profile information for debugging
+- Refresh all profiles (update all imported profiles)
+  - Send intent to activity `com.github.kr328.clash.ExternalControlActivity` with action `com.github.metacubex.clash.meta.action.REFRESH_PROFILE`
+  - Updates all imported profiles from their sources (URL-based profiles)
+  - Skips file-based profiles that cannot be updated
+  - Logs detailed refresh progress and results for each profile
 - Import a profile
   - URL Scheme `clash://install-config?url=<encoded URI>` or `clashmeta://install-config?url=<encoded URI>`
 
@@ -75,6 +80,9 @@ am start -n com.github.metacubex.clash.meta/com.github.kr328.clash.ExternalContr
 
 # Toggle active profile (cycle through profiles)
 am start -n com.github.metacubex.clash.meta/com.github.kr328.clash.ExternalControlActivity -a com.github.metacubex.clash.meta.action.TOGGLE_PROFILE
+
+# Refresh all profiles (update all imported profiles)
+am start -n com.github.metacubex.clash.meta/com.github.kr328.clash.ExternalControlActivity -a com.github.metacubex.clash.meta.action.REFRESH_PROFILE
 
 # Import a profile with URL scheme
 am start -a android.intent.action.VIEW -d "clashmeta://install-config?url=http%3A%2F%2F192.168.1.118%3A59996%2Fclash%2Fdns_reject.yaml"
