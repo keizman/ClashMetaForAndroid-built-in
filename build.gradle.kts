@@ -46,8 +46,8 @@ subprojects {
             minSdk = 21
             targetSdk = 35
 
-            versionName = "2.13.8"
-            versionCode = 213008
+            versionName = "2.13.9"
+            versionCode = 213009
 
             resValue("string", "release_name", "v$versionName")
             resValue("integer", "release_code", "$versionCode")
@@ -149,6 +149,8 @@ subprojects {
                     getDefaultProguardFile("proguard-android-optimize.txt"),
                     "proguard-rules.pro"
                 )
+                // Enable debugging for release builds to preserve logs
+                isDebuggable = true
             }
             named("debug") {
                 versionNameSuffix = ".debug"

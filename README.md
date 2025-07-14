@@ -53,8 +53,32 @@ APP package name is `com.github.metacubex.clash.meta`
   - Send intent to activity `com.github.kr328.clash.ExternalControlActivity` with action `com.github.metacubex.clash.meta.action.START_CLASH`
 - Stop Clash.Meta service
   - Send intent to activity `com.github.kr328.clash.ExternalControlActivity` with action `com.github.metacubex.clash.meta.action.STOP_CLASH`
+- Toggle active profile (cycle through all profiles)
+  - Send intent to activity `com.github.kr328.clash.ExternalControlActivity` with action `com.github.metacubex.clash.meta.action.TOGGLE_PROFILE`
+  - This cycles through all available profiles in order and selects the next one
+  - Only changes the active profile without starting/stopping the service
+  - Logs detailed profile information for debugging
 - Import a profile
   - URL Scheme `clash://install-config?url=<encoded URI>` or `clashmeta://install-config?url=<encoded URI>`
+
+#### Automation Examples
+
+```bash
+# Toggle Clash.Meta service status
+am start -n com.github.metacubex.clash.meta/com.github.kr328.clash.ExternalControlActivity -a com.github.metacubex.clash.meta.action.TOGGLE_CLASH
+
+# Start Clash.Meta service
+am start -n com.github.metacubex.clash.meta/com.github.kr328.clash.ExternalControlActivity -a com.github.metacubex.clash.meta.action.START_CLASH
+
+# Stop Clash.Meta service
+am start -n com.github.metacubex.clash.meta/com.github.kr328.clash.ExternalControlActivity -a com.github.metacubex.clash.meta.action.STOP_CLASH
+
+# Toggle active profile (cycle through profiles)
+am start -n com.github.metacubex.clash.meta/com.github.kr328.clash.ExternalControlActivity -a com.github.metacubex.clash.meta.action.TOGGLE_PROFILE
+
+# Import a profile with URL scheme
+am start -a android.intent.action.VIEW -d "clashmeta://install-config?url=http%3A%2F%2F192.168.1.118%3A59996%2Fclash%2Fdns_reject.yaml"
+```
 
 ### Contribution and Project Maintenance
 

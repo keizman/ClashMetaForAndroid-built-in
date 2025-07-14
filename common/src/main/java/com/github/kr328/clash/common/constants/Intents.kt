@@ -8,6 +8,7 @@ object Intents {
     val ACTION_START_CLASH = "$packageName.action.START_CLASH"
     val ACTION_STOP_CLASH = "$packageName.action.STOP_CLASH"
     val ACTION_TOGGLE_CLASH = "$packageName.action.TOGGLE_CLASH"
+    val ACTION_TOGGLE_PROFILE = "$packageName.action.TOGGLE_PROFILE"
 
     const val EXTRA_NAME = "name"
 

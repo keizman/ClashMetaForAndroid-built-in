@@ -69,6 +69,10 @@ class ExternalControlActivity : Activity(), CoroutineScope by MainScope() {
             else {
                 Toast.makeText(this, R.string.external_control_stopped, Toast.LENGTH_LONG).show()
             }
+
+            Intents.ACTION_TOGGLE_PROFILE -> {
+                toggleProfile()
+            }
         }
         return finish()
     }
@@ -89,5 +93,51 @@ class ExternalControlActivity : Activity(), CoroutineScope by MainScope() {
     private fun stopClash() {
         stopClashService()
         Toast.makeText(this, R.string.external_control_stopped, Toast.LENGTH_LONG).show()
+    }
+
+    private fun toggleProfile() {
+        val TAG = "ClashMetaForAndroid"
+        
+        launch {
+            try {
+                val allProfiles = withProfile {
+                    queryAll()
+                }
+                
+                if (allProfiles.isEmpty()) {
+                    android.util.Log.i(TAG, "[ToggleProfile] No profiles available to toggle")
+                    Toast.makeText(this@ExternalControlActivity, "No profiles available", Toast.LENGTH_LONG).show()
+                    return@launch
+                }
+                
+                val currentActive = withProfile {
+                    queryActive()
+                }
+                
+                val nextProfile = if (currentActive == null) {
+                    allProfiles.first()
+                } else {
+                    val currentIndex = allProfiles.indexOfFirst { it.uuid == currentActive.uuid }
+                    val nextIndex = (currentIndex + 1) % allProfiles.size
+                    allProfiles[nextIndex]
+                }
+                
+                withProfile {
+                    setActive(nextProfile)
+                }
+                
+                android.util.Log.i(TAG, "[ToggleProfile] Switched to profile: ${nextProfile.name}")
+                android.util.Log.i(TAG, "[ToggleProfile] Profile URL: ${nextProfile.source}")
+                android.util.Log.i(TAG, "[ToggleProfile] Profile UUID: ${nextProfile.uuid}")
+                android.util.Log.i(TAG, "[ToggleProfile] Profile Type: ${nextProfile.type}")
+                android.util.Log.i(TAG, "[ToggleProfile] Total profiles available: ${allProfiles.size}")
+                
+                Toast.makeText(this@ExternalControlActivity, "Switched to: ${nextProfile.name}", Toast.LENGTH_LONG).show()
+                
+            } catch (e: Exception) {
+                android.util.Log.e(TAG, "[ToggleProfile] Error switching profile", e)
+                Toast.makeText(this@ExternalControlActivity, "Error switching profile: ${e.message}", Toast.LENGTH_LONG).show()
+            }
+        }
     }
 }
