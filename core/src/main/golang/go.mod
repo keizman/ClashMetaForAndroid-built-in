@@ -11,6 +11,9 @@ require (
 
 replace github.com/metacubex/mihomo => ../../foss/golang/clash
 
+// Use local sing library with buffer leak fix
+replace github.com/metacubex/sing => ../../foss/golang/clash/sing
+
 require (
 	github.com/3andne/restls-client-go v0.1.6 // indirect
 	github.com/RyuaNerin/go-krypto v1.3.0 // indirect
