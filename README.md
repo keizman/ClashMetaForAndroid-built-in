@@ -361,3 +361,14 @@ Fix leaking mem error, 大量日志输出导致判断异常
 
   这些修复应该能解决你遇到的崩溃问题，同时保持代码的稳定性。
 ```
+
+  1. ✅ 修复了 sing 库的 buffer leak 问题
+    - 替换了 buffer.Leak() 为 buffer.Release() 在错误处理中
+    - 改进了 buffer.Leak() 方法的实现
+  2. ✅ 正确配置了本地路径引用
+    - 将 sing 目录移动到 core/src/foss/golang/clash/sing/
+    - 更新了所有相关的 go.mod 文件使用正确的相对路径
+  3. ✅ 解决了路径问题
+    - clash/go.mod: replace github.com/metacubex/sing => ./sing
+    - main/golang/go.mod: replace github.com/metacubex/sing => ../../foss/golang/clash/sing
+    - foss/golang/go.mod: replace github.com/metacubex/sing => ./clash/sing
