@@ -83,7 +83,7 @@ class ClashService : BaseService() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         sendClashStarted()
 
-        return START_STICKY
+        return super.onStartCommand(intent, flags, startId)
     }
 
     override fun onBind(intent: Intent?): IBinder {
@@ -100,6 +100,10 @@ class ClashService : BaseService() {
         Log.i("ClashService destroyed: ${reason ?: "successfully"}")
 
         super.onDestroy()
+    }
+    
+    override fun getDestructionReason(): String? {
+        return reason
     }
 
     override fun onTrimMemory(level: Int) {
