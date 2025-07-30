@@ -372,3 +372,16 @@ Fix leaking mem error, 大量日志输出导致判断异常
     - clash/go.mod: replace github.com/metacubex/sing => ./sing
     - main/golang/go.mod: replace github.com/metacubex/sing => ../../foss/golang/clash/sing
     - foss/golang/go.mod: replace github.com/metacubex/sing => ./clash/sing
+
+
+
+
+
+将 store.bypassPrivateNetwork 设置未默认关闭状态
+`service\src\main\java\com\github\kr328\clash\service\store\ServiceStore.kt` :24
+
+修改版本号
+build.gradle.kts
+
+
+214009 default turn off bypass
