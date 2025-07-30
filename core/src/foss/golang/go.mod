@@ -113,3 +113,6 @@ require (
 replace cfa => ../../main/golang
 
 replace github.com/metacubex/mihomo => ./clash
+
+// Use local sing library with buffer leak fix
+replace github.com/metacubex/sing => ./clash/sing

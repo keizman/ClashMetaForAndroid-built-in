@@ -10,8 +10,15 @@ import com.github.kr328.clash.design.databinding.DesignMainBinding
 import com.github.kr328.clash.design.util.layoutInflater
 import com.github.kr328.clash.design.util.resolveThemedColor
 import com.github.kr328.clash.design.util.root
+import com.github.kr328.clash.design.ui.ToastDuration
+import com.github.kr328.clash.service.model.Profile
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import java.util.UUID
+import java.util.concurrent.TimeUnit
 
 class MainDesign(context: Context) : Design<MainDesign.Request>(context) {
     enum class Request {
@@ -23,6 +30,9 @@ class MainDesign(context: Context) : Design<MainDesign.Request>(context) {
         OpenSettings,
         OpenHelp,
         OpenAbout,
+        SyncProfile,
+        RefreshProfiles,
+        ShowFloatingWindow,
     }
 
     private val binding = DesignMainBinding
@@ -63,6 +73,12 @@ class MainDesign(context: Context) : Design<MainDesign.Request>(context) {
     suspend fun setHasProviders(has: Boolean) {
         withContext(Dispatchers.Main) {
             binding.hasProviders = has
+        }
+    }
+
+    suspend fun setFloatingWindowShowing(showing: Boolean) {
+        withContext(Dispatchers.Main) {
+            binding.floatingWindowShowing = showing
         }
     }
 

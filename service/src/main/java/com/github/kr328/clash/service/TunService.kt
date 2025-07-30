@@ -113,6 +113,7 @@ class TunService : VpnService(), CoroutineScope by CoroutineScope(Dispatchers.De
 
         super.onDestroy()
     }
+    
 
     override fun onTrimMemory(level: Int) {
         super.onTrimMemory(level)
