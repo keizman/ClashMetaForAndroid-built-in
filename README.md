@@ -1,4 +1,4 @@
-## Clash Meta for Android
+## ---Clash Meta for Android
 
 A Graphical user interface of [Clash.Meta](https://github.com/MetaCubeX/Clash.Meta) for Android
 
@@ -230,7 +230,7 @@ The main reason for sync failure was Android's default network security policy t
 
 
 | File                                                       | Purpose             | Changes                                                   |
-| ---------------------------------------------------------- | ------------------- | --------------------------------------------------------- |
+| ------------------------------------------------------------ | --------------------- | ----------------------------------------------------------- |
 | `gradle.properties`                                        | Build configuration | Added JVM parameters, TLS protocols, warning suppressions |
 | `build.gradle.kts`                                         | Root build script   | Added Kotlin JVM target configuration                     |
 | `local.properties`                                         | SDK configuration   | Fixed path format, removed hidden characters              |
@@ -252,17 +252,6 @@ git submodule update --init --recursive
 ./gradlew app:assembleMetaRelease
 ```
 
-#### Testing & Validation
-
-**Build Verification:**
-
-- Successfully built with OpenJDK 24
-- Generated APKs for all target architectures:
-  - `cmfa-2.11.13-meta-universal-release.apk` (61MB)
-  - `cmfa-2.11.13-meta-arm64-v8a-release.apk` (25MB)
-  - `cmfa-2.11.13-meta-armeabi-v7a-release.apk` (25MB)
-  - `cmfa-2.11.13-meta-x86_64-release.apk` (25MB)
-  - `cmfa-2.11.13-meta-x86-release.apk` (26MB)
 
 ---
 
@@ -307,7 +296,6 @@ Fix leaking mem error, 大量日志输出导致判断异常
   版本日志打开后, release 也会崩溃了, 可能与日志打印有关? 你可以先按照你自己的思路排查, 最后找不到再考虑这种情况, 给出适合的修复方案
 ```
 
-
 ● 根据分析，我发现了问题的根本原因。让我提供具体的修复方案：
 
 问题分析
@@ -324,11 +312,6 @@ Fix leaking mem error, 大量日志输出导致判断异常
 修复方案
 
 方案一：修复 sing 库的缓冲区泄露检测逻辑
-
-
-
-
-
 
 ```
 ● 修复方案总结
@@ -362,20 +345,16 @@ Fix leaking mem error, 大量日志输出导致判断异常
   这些修复应该能解决你遇到的崩溃问题，同时保持代码的稳定性。
 ```
 
-  1. ✅ 修复了 sing 库的 buffer leak 问题
-    - 替换了 buffer.Leak() 为 buffer.Release() 在错误处理中
-    - 改进了 buffer.Leak() 方法的实现
-  2. ✅ 正确配置了本地路径引用
-    - 将 sing 目录移动到 core/src/foss/golang/clash/sing/
-    - 更新了所有相关的 go.mod 文件使用正确的相对路径
-  3. ✅ 解决了路径问题
-    - clash/go.mod: replace github.com/metacubex/sing => ./sing
-    - main/golang/go.mod: replace github.com/metacubex/sing => ../../foss/golang/clash/sing
-    - foss/golang/go.mod: replace github.com/metacubex/sing => ./clash/sing
-
-
-
-
+1. ✅ 修复了 sing 库的 buffer leak 问题
+   - 替换了 buffer.Leak() 为 buffer.Release() 在错误处理中
+   - 改进了 buffer.Leak() 方法的实现
+2. ✅ 正确配置了本地路径引用
+   - 将 sing 目录移动到 core/src/foss/golang/clash/sing/
+   - 更新了所有相关的 go.mod 文件使用正确的相对路径
+3. ✅ 解决了路径问题
+   - clash/go.mod: replace github.com/metacubex/sing => ./sing
+   - main/golang/go.mod: replace github.com/metacubex/sing => ../../foss/golang/clash/sing
+   - foss/golang/go.mod: replace github.com/metacubex/sing => ./clash/sing
 
 将 store.bypassPrivateNetwork 设置未默认关闭状态
 `service\src\main\java\com\github\kr328\clash\service\store\ServiceStore.kt` :24
@@ -383,5 +362,141 @@ Fix leaking mem error, 大量日志输出导致判断异常
 修改版本号
 build.gradle.kts
 
-
 214009 default turn off bypass
+
+
+-------------
+
+
+
+
+1. 构建配置中已启用 RELEASE 版本调试:
+- build.gradle.kts:153 中设置了 isDebuggable = true，这意味着 RELEASE 版本也会输出日志
+
+2. 日志层级系统:
+- Clash 核心使用 5 个日志级别：DEBUG, INFO, WARNING, ERROR, SILENT
+- 位置：core/src/foss/golang/clash/log/level.go
+
+3. 日志流向:
+- Go 核心日志通过 core/src/main/golang/native/log.go 转发到 Android 系统日志
+- Android 端使用 common/src/main/java/com/github/kr328/clash/common/log/Log.kt 统一管理
+
+如何控制日志开关
+
+选项1: 修改构建配置
+// build.gradle.kts 中的 buildTypes
+buildTypes {
+    named("release") {
+        isMinifyEnabled = isApp
+        isShrinkResources = isApp
+        signingConfig = signingConfigs.findByName("release") ?: signingConfigs["debug"]
+        proguardFiles(
+            getDefaultProguardFile("proguard-android-optimize.txt"),
+            "proguard-rules.pro"
+        )
+        // 修改这里控制是否输出日志
+        isDebuggable = false  // 设为 false 禁用 RELEASE 日志
+    }
+}
+
+选项2: 添加 BuildConfig 字段控制
+// 在 productFlavors 中添加
+buildConfigField("boolean", "ENABLE_LOGGING", "true") // 或 "false"
+
+然后在日志类中检查：
+// Log.kt 中添加检查
+fun d(message: String, throwable: Throwable? = null) {
+    if (BuildConfig.ENABLE_LOGGING) {
+        android.util.Log.d(TAG, message, throwable)
+    }
+}
+
+
+
+
+
+
+-------------
+2.15.1
+  
+为什么 YAML 配置文件中的 external-controller 没有生效，而 override 配置可以正常工作。
+```
+在 Clash for Android 中，配置处理有一个特殊的安全机制：
+// 第44-48行：core/src/main/golang/native/config/process.go
+func patchExternalController(cfg *config.RawConfig, _ string) error {
+	cfg.ExternalController = ""      // 强制清空外部控制器
+	cfg.ExternalControllerTLS = ""   // 强制清空TLS外部控制器
+	return nil
+}
+关键注释（第20行）：
+var processors = []processor{
+	patchExternalController, // 1️⃣ 首先强制清空外部控制器
+	patchOverride,          // 2️⃣ 然后应用覆盖配置
+	patchGeneral,           // 3️⃣ 处理通用配置
+	// ... 其他处理器
+}
+> // must before patchOverride, so we only apply ExternalController in Override settings
+```
+
+修改 注释掉了 core/src/main/golang/native/config/process.go:patchExternalController 函数下的强制清空代码
+
+
+
+---
+`core\src\foss\golang\clash\hub\route\server.go`
+embedMode（嵌入模式）是 Clash Meta 为 嵌入式环境（如 Android APP）设计的一种运行模式。
+🔧 embedMode 的设置
+在 Android 环境下，embedMode 默认被设置为 true。
+🚫 embedMode 禁用的功能
+当 embedMode = true 时，以下 API 端点被禁用：
+1. 重启功能 (/restart)
+
+为什么要禁用这些功能？
+🔒 安全原因
+防止应用崩溃: 在 Android 环境中，直接重启核心可能导致整个应用崩溃
+权限限制: Android 应用无法像独立程序那样重启自身
+进程管理: Android 有严格的进程生命周期管理
+🏗️ 架构原因
+嵌入式设计: Clash 核心被嵌入到 Android 应用中，不是独立运行的程序
+应用级管理: 配置更改应该通过 Android 应用界面进行，而不是通过 API
+生命周期控制: 重启等操作应该由 Android 应用控制，不是核心自己
+📱 Android 特殊性
+APK 更新: 核心升级需要通过 Google Play 或 APK 更新，不能自我更新
+文件权限: Android 应用有严格的文件系统权限限制
+系统集成: 需要与 Android 系统（VPN 服务等）紧密集成
+
+----
+
+
+增加 /hosts 接口. 详情在 HOSTS_API_DOCS.md
+
+
+----
+修复: DNS 查询先使用 hosts 查询, 之后再使用 DNS 解析, 避免结果与实际 nslookup 结果不一致
+`core/src/foss/golang/clash/hub/route/dns.go`
+
+
+---
+
+build.gradle.kts 中修改了三个关键位置，完全移除了 x86 和 x86_64 架构支持：
+
+  🔧 修改位置
+
+  1. 第 56 行 - NDK 配置：
+  // 修改前
+  abiFilters += listOf("arm64-v8a", "armeabi-v7a", "x86", "x86_64")
+
+  // 修改后
+  abiFilters += listOf("arm64-v8a", "armeabi-v7a")
+  2. 第 61 行 - CMake 配置：
+  // 修改前
+  abiFilters("arm64-v8a", "armeabi-v7a", "x86", "x86_64")
+
+  // 修改后
+  abiFilters("arm64-v8a", "armeabi-v7a")
+  3. 第 174 行 - APK 分割配置：
+  // 修改前
+  include("arm64-v8a", "armeabi-v7a", "x86", "x86_64")
+
+  // 修改后
+  include("arm64-v8a", "armeabi-v7a")

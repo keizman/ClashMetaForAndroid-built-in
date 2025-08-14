@@ -46,19 +46,19 @@ subprojects {
             minSdk = 21
             targetSdk = 35
 
-            versionName = "2.14.9"
-            versionCode = 214009
+            versionName = "2.15.1"
+            versionCode = 215001
 
             resValue("string", "release_name", "v$versionName")
             resValue("integer", "release_code", "$versionCode")
 
             ndk {
-                abiFilters += listOf("arm64-v8a", "armeabi-v7a", "x86", "x86_64")
+                abiFilters += listOf("arm64-v8a", "armeabi-v7a")
             }
 
             externalNativeBuild {
                 cmake {
-                    abiFilters("arm64-v8a", "armeabi-v7a", "x86", "x86_64")
+                    abiFilters("arm64-v8a", "armeabi-v7a")
                 }
             }
 
@@ -171,7 +171,7 @@ subprojects {
                     isEnable = true
                     isUniversalApk = true
                     reset()
-                    include("arm64-v8a", "armeabi-v7a", "x86", "x86_64")
+                    include("arm64-v8a", "armeabi-v7a")
                 }
             }
         }

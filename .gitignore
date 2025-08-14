@@ -65,3 +65,4 @@ google-services.json
 # MacOS
 .DS_Store
 .claude/settings.local.json
+test_hosts_api.sh

@@ -307,6 +307,15 @@
     <string name="geodata_mode">Geodata Mode</string>
     <string name="tcp_concurrent">TCP Concurrent</string>
     <string name="find_process_mode">Find Process Mode</string>
+    <string name="sniffing">Sniffer Mode</string>
+    <string name="sniffer_override">Override Sniffer Config</string>
+    <string name="disable_sniffer">Disable Sniffer</string>
+    <string name="port_whitelist">Port Whitelist</string>
+    <string name="script_mode">Script Mode</string>
+    <string name="sideload_geoip">Sideload GeoIP</string>
+    <string name="sideload_geoip_summary">Load GeoIP database from external file</string>
+    <string name="sniff">Sniff</string>
+    <string name="sniffer_config">Sniffer Config</string>
 
     <string name="sniffer_setting">Sniffer Setting</string>
     <string name="sniffer">Sniffer</string>

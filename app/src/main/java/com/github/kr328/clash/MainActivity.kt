@@ -193,10 +193,9 @@ class MainActivity : BaseActivity<MainDesign>() {
                 // Define profiles to download
                 val builtInProfiles = listOf(
                     "http://10.8.24.59:59996/clash/dns_67.yaml" to "dns_67",
-                    "http://10.8.24.59:59996/clash/socks5.yaml" to "socks5",
+                    //"http://10.8.24.59:59996/clash/socks5.yaml" to "socks5",
                     "http://10.8.24.59:59996/clash/dns_65.yaml" to "dns_65", 
                     "http://10.8.24.59:59996/clash/dns_64.yaml" to "dns_64",
-                    // "http://10.8.24.59:59996/clash/dns_62.yaml" to "dns_62",
                     "http://10.8.24.59:59996/clash/dns_reject.yaml" to "dns_reject",
                     "http://10.8.24.59:59996/clash/pre-product.yaml" to "pre-product",
                     "http://10.8.24.59:59996/clash/product.yaml" to "product"

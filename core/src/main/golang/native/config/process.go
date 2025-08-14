@@ -17,7 +17,7 @@ import (
 )
 
 var processors = []processor{
-	patchExternalController, // must before patchOverride, so we only apply ExternalController in Override settings
+	patchExternalController, // 已禁用外部控制器限制，现在允许YAML配置中的external-controller生效. 原注释 // must before patchOverride, so we only apply ExternalController in Override settings
 	patchOverride,
 	patchGeneral,
 	patchProfile,
@@ -42,8 +42,9 @@ func patchOverride(cfg *config.RawConfig, _ string) error {
 }
 
 func patchExternalController(cfg *config.RawConfig, _ string) error {
-	cfg.ExternalController = ""
-	cfg.ExternalControllerTLS = ""
+	// 注释掉强制清空外部控制器的限制，允许YAML配置中的external-controller生效
+	// cfg.ExternalController = ""
+	// cfg.ExternalControllerTLS = ""
 
 	return nil
 }
